@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Report — {{ run_id }} — MDIMG QA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-file-earmark-text me-2"></i>Markdown Report</h3>
+    <div>
+        <a href="{{ url_for('result', run_id=run_id) }}" class="btn btn-outline-primary btn-sm me-1">
+            <i class="bi bi-clipboard-data me-1"></i>Results
+        </a>
+        <a href="{{ url_for('download_report', run_id=run_id) }}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-download me-1"></i>Download .md
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body rendered-markdown">
+        {{ report_html | safe }}
+    </div>
+</div>
+{% endblock %}

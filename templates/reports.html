@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Reports — MDIMG QA{% endblock %}
+
+{% block content %}
+<h3 class="mb-3"><i class="bi bi-folder2-open me-2"></i>Past Runs</h3>
+
+{% if runs %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Run ID</th>
+                <th>File</th>
+                <th>Status</th>
+                <th>Model</th>
+                <th>Issues</th>
+                <th>Timestamp</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in runs %}
+            <tr>
+                <td><code>{{ r.run_id[:12] }}…</code></td>
+                <td>{{ r.get('input_filename', '—') }}</td>
+                <td>
+                    {% set s = r.get('status', '?') %}
+                    {% if s == 'PASS' %}<span class="badge bg-success">PASS</span>
+                    {% elif s == 'WARN' %}<span class="badge bg-warning text-dark">WARN</span>
+                    {% elif s == 'FAIL' %}<span class="badge bg-danger">FAIL</span>
+                    {% else %}<span class="badge bg-secondary">{{ s }}</span>{% endif %}
+                </td>
+                <td><small>{{ r.get('model', '—') }}</small></td>
+                <td>
+                    {% set issues = r.get('issues', []) %}
+                    {% if issues is string %}{{ issues }}
+                    {% else %}{{ issues|length }}{% endif %}
+                </td>
+                <td><small>{{ r.get('created_at', '—') }}</small></td>
+                <td class="text-end">
+                    <a href="{{ url_for('result', run_id=r.run_id) }}" class="btn btn-sm btn-outline-primary me-1"
+                       title="Results"><i class="bi bi-clipboard-data"></i></a>
+                    <a href="{{ url_for('report_detail', run_id=r.run_id) }}" class="btn btn-sm btn-outline-info me-1"
+                       title="Markdown Report"><i class="bi bi-file-earmark-text"></i></a>
+                    <a href="{{ url_for('logs', run_id=r.run_id) }}" class="btn btn-sm btn-outline-secondary"
+                       title="Agent Logs"><i class="bi bi-journal-text"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-inbox fs-1 text-muted"></i>
+    <p class="text-muted mt-2">No runs recorded yet. <a href="{{ url_for('index') }}">Upload a DICOM file</a> to get started.</p>
+</div>
+{% endif %}
+{% endblock %}

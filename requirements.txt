@@ -1,0 +1,22 @@
+# Core image processing
+numpy>=1.24.0
+pydicom>=2.4.0
+scipy>=1.10.0
+scikit-image>=0.21.0
+PyWavelets>=1.4.0
+matplotlib>=3.7.0
+
+# GenAI layer (OpenAI Agents SDK)
+openai-agents>=0.8.0
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+
+# Web UI
+flask>=3.0.0
+flask-wtf>=1.2.0
+flask-cors>=4.0.0
+markdown>=3.5.0
+
+# Testing & linting
+pytest>=7.4.0
+ruff>=0.4.0

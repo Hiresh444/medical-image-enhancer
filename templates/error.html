@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Error — MDIMG QA{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-1 text-danger">{{ code | default('Error') }}</h1>
+    <p class="lead">{{ message | default('Something went wrong.') }}</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">
+        <i class="bi bi-arrow-left me-1"></i>Back to Upload
+    </a>
+</div>
+{% endblock %}

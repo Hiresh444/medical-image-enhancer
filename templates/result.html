@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Results — {{ run.run_id }} — MDIMG QA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-clipboard-data me-2"></i>Run Results</h3>
+    <div>
+        <a href="{{ url_for('report_detail', run_id=run.run_id) }}" class="btn btn-outline-info btn-sm me-1">
+            <i class="bi bi-file-earmark-text me-1"></i>Full Report
+        </a>
+        <a href="{{ url_for('logs', run_id=run.run_id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-journal-text me-1"></i>Agent Logs
+        </a>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Run ID</h6>
+                <code>{{ run.run_id }}</code>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Status</h6>
+                {% set status = run.get('status', 'unknown') %}
+                {% if status == 'PASS' %}
+                <span class="badge bg-success fs-6">✅ PASS</span>
+                {% elif status == 'WARN' %}
+                <span class="badge bg-warning text-dark fs-6">⚠️ WARN</span>
+                {% elif status == 'FAIL' %}
+                <span class="badge bg-danger fs-6">❌ FAIL</span>
+                {% else %}
+                <span class="badge bg-secondary fs-6">{{ status }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="card-title text-muted">File</h6>
+                <span>{{ run.get('input_filename', 'N/A') }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detected Issues -->
+<div class="card mb-3">
+    <div class="card-header"><h5 class="mb-0">🔍 Detected Issues</h5></div>
+    <div class="card-body">
+        {% set issues = run.get('issues', []) %}
+        {% if issues %}
+        <div class="d-flex flex-wrap gap-2">
+            {% for issue in issues %}
+            <span class="badge bg-warning text-dark fs-6">{{ issue }}</span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <span class="text-success">No issues detected.</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Metrics Table -->
+<div class="card mb-3">
+    <div class="card-header"><h5 class="mb-0">📊 Quality Metrics</h5></div>
+    <div class="card-body table-responsive">
+        {% set mb = run.get('metrics_before', {}) %}
+        {% set ma = run.get('metrics_after', {}) %}
+        <table class="table table-sm table-hover">
+            <thead><tr><th>Metric</th><th>Before</th><th>After</th><th>Change</th></tr></thead>
+            <tbody>
+            {% for key in ['sigma', 'lap_var', 'std', 'pct_low', 'pct_high', 'entropy', 'edge_density', 'gradient_mag_mean', 'snr_proxy', 'cnr_proxy', 'laplacian_energy', 'histogram_spread'] %}
+            {% if key in mb %}
+            <tr>
+                <td><code>{{ key }}</code></td>
+                <td>{{ "%.4f"|format(mb[key]) }}</td>
+                <td>{{ "%.4f"|format(ma.get(key, 0)) }}</td>
+                {% set diff = ma.get(key, 0) - mb[key] %}
+                <td class="{{ 'text-success' if diff > 0.001 else ('text-danger' if diff < -0.001 else 'text-muted') }}">
+                    {{ "%+.4f"|format(diff) }}
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Validation -->
+<div class="card mb-3">
+    <div class="card-header"><h5 class="mb-0">✅ Validation</h5></div>
+    <div class="card-body">
+        {% set val = run.get('validation', {}) %}
+        <div class="row">
+            <div class="col-md-3 text-center">
+                <h6>SSIM</h6>
+                <span class="fs-4 {{ 'text-success' if val.get('meets_ssim') else 'text-danger' }}">
+                    {{ "%.3f"|format(val.get('ssim', 0)) }}
+                </span>
+            </div>
+            <div class="col-md-3 text-center">
+                <h6>PSNR</h6>
+                <span class="fs-4 {{ 'text-success' if val.get('meets_psnr') else 'text-danger' }}">
+                    {{ "%.2f"|format(val.get('psnr', 0)) }} dB
+                </span>
+            </div>
+            <div class="col-md-3 text-center">
+                <h6>Quality Imp.</h6>
+                <span class="fs-4 {{ 'text-success' if val.get('meets_improvement') else 'text-danger' }}">
+                    {{ "%.3f"|format(val.get('quality_improvement', 0)) }}
+                </span>
+            </div>
+            <div class="col-md-3 text-center">
+                <h6>Verdict</h6>
+                {% if val.get('passes') %}
+                <span class="badge bg-success fs-6">PASS</span>
+                {% else %}
+                <span class="badge bg-danger fs-6">FAIL</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Applied Ops -->
+<div class="card mb-3">
+    <div class="card-header"><h5 class="mb-0">🛠️ Applied Operations</h5></div>
+    <div class="card-body">
+        {% set ops = run.get('applied_ops', []) %}
+        {% if ops %}
+        <ol>
+            {% for op in ops %}
+            <li>{{ op }}</li>
+            {% endfor %}
+        </ol>
+        {% else %}
+        <span class="text-muted">No enhancements applied.</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Plan JSON (collapsible) -->
+{% if run.get('plan_json') %}
+<div class="card mb-3">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <a class="text-decoration-none" data-bs-toggle="collapse" href="#planCollapse">
+                🤖 GenAI Plan (JSON) <i class="bi bi-chevron-down"></i>
+            </a>
+        </h5>
+    </div>
+    <div class="collapse" id="planCollapse">
+        <div class="card-body">
+            <pre class="bg-dark text-light p-3 rounded"><code>{{ run.plan_json }}</code></pre>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Explainability -->
+{% set expl = run.get('explainability', {}) %}
+{% if expl and expl is mapping %}
+<div class="card mb-3">
+    <div class="card-header"><h5 class="mb-0">🧠 GenAI Explanation</h5></div>
+    <div class="card-body">
+        {% for key in ['detected_issues', 'corrective_measures', 'enhancement_applied', 'validation_outcome', 'limitations', 'image_summary'] %}
+        {% if expl.get(key) %}
+        <p><strong>{{ key|replace('_', ' ')|title }}:</strong> {{ expl[key] }}</p>
+        {% endif %}
+        {% endfor %}
+        {% if expl.get('actionable_suggestions') %}
+        <p><strong>Actionable Suggestions:</strong></p>
+        <ul>
+            {% for s in expl.actionable_suggestions %}
+            <li>{{ s }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if expl.get('next_steps') %}
+        <p><strong>Next Steps:</strong></p>
+        <ul>
+            {% for s in expl.next_steps %}
+            <li>{{ s }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Before/After Images -->
+{% if run.get('before_after_path') %}
+<div class="card mb-3">
+    <div class="card-header"><h5 class="mb-0">🖼️ Before vs After</h5></div>
+    <div class="card-body text-center">
+        {% set img_filename = run.before_after_path.split('/')[-1].split('\\')[-1] %}
+        <img src="{{ url_for('serve_output', filename=img_filename) }}" 
+             alt="Before vs After" class="img-fluid rounded shadow" style="max-height: 500px;">
+    </div>
+</div>
+{% endif %}
+
+<!-- Chat Interface -->
+<div class="card mb-3">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Ask About This Run</h5>
+    </div>
+    <div class="card-body">
+        <div id="chatMessages" class="border rounded p-3 mb-3" style="max-height: 400px; overflow-y: auto;">
+            {% for msg in chat_history %}
+            <div class="mb-2 {{ 'text-end' if msg.role == 'user' else '' }}">
+                <span class="badge {{ 'bg-primary' if msg.role == 'user' else 'bg-secondary' }}">
+                    {{ msg.role }}
+                </span>
+                <p class="mb-0 mt-1">{{ msg.content }}</p>
+            </div>
+            {% endfor %}
+            {% if not chat_history %}
+            <p class="text-muted text-center" id="chatPlaceholder">
+                Ask questions like "Why did SSIM drop?" or "What does NIQE mean?"
+            </p>
+            {% endif %}
+        </div>
+        <div class="input-group">
+            <input type="text" class="form-control" id="chatInput"
+                   placeholder="Ask about metrics, plan, or results..."
+                   maxlength="2000">
+            <button class="btn btn-primary" id="chatSend" onclick="sendChat()">
+                <i class="bi bi-send"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const RUN_ID = "{{ run.run_id }}";
+</script>
+<script src="{{ url_for('static', filename='chat.js') }}"></script>
+{% endblock %}
