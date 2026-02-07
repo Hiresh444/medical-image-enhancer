@@ -12,7 +12,7 @@ with full traceability, a web UI, and reproducible builds.
 │  --input --genai         JSON-only REST API     Vite + React SPA  │
 │  --model --max-iters     /api/upload, /api/run  Upload, Runs,     │
 │                          /api/runs, /api/chat   Detail + Chat     │
-└────────┬─────────────────────┬──────────────────────────┘
+└────────┬─────────────────────┬────────────────────────────────────┘
          │                     │
          └─────────┬───────────┘
                    ▼
@@ -21,14 +21,14 @@ with full traceability, a web UI, and reproducible builds.
         └──────────┬───────────┘
                    ▼
  ┌───────────────────────────────────────────────────────┐
- │  pipeline/ package                                     │
+ │  pipeline/ package                                    │
  │  core_agents.py   — Detection, Recommendation,        │
- │                    Enhancement, Validation, Report     │
+ │                    Enhancement, Validation, Report    │
  │  genai_agents.py  — Planner, Tuning, Explainability   │
  │  metrics.py       — 16 quality metrics + scoring      │
  │  enhancement.py   — 7-step enhancement pipeline       │
  │  storage.py       — SQLite persistence                │
- │  chat.py          — Agentic chat assistant             │
+ │  chat.py          — Agentic chat assistant            │
  │  dicom_io.py      — DICOM loading + report builder    │
  └───────────────────────────────────────────────────────┘
 ```
